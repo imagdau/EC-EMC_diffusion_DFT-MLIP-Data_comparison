@@ -5,6 +5,7 @@ dependencies:
   - python=3.10
   - pip=21.2.4
   - pip:
+    - matplotlib==3.8.3
     - quippy-ase==0.9.14
     - git+https://github.com/imagdau/aseMolec.git@038b00d4a46f366ede348510a52bc5ede8ba8bbb
     - nglview==3.1.2
