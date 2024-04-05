@@ -1,4 +1,4 @@
-name: EC-EMC_diffusion_DFT-MLIP-Data_comparison
+name: ECEMC_densities_MLIP
 channels:
   - defaults
 dependencies:
