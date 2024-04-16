@@ -7,5 +7,6 @@ dependencies:
   - pip:
     - matplotlib==3.8.3
     - quippy-ase==0.9.14
-    - git+https://github.com/imagdau/aseMolec.git@038b00d4a46f366ede348510a52bc5ede8ba8bbb
+    - git+https://github.com/imagdau/aseMolec.git@3b1667abd2e4b061aa9f2e910634d38e17fe4779
+    - git+https://github.com/imagdau/zenodo-explorer.git@369ca8ebf9bac13e6423fac6bb7c239cea087c7d
     - nglview==3.1.2
