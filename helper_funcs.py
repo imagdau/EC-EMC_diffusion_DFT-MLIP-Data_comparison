@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from scipy.stats import linregress
+from collections import Counter
+
 
 from aseMolec import pltProps as pp
 from aseMolec import anaAtoms as aa
@@ -218,3 +220,81 @@ def get_start_index(time, msd, threshold=False, min_steps=0):
         #idx = np.argmin(slopes[~np.isnan(slopes)])
         idx = np.argmin(slopes)
     return idx
+
+
+def collect_comp(db):
+    buf = {}
+    for at in db:
+        #at.info['Nmols'] 
+        if at.info['Nmols'] in buf:
+            try:
+                buf[at.info['Nmols']] += [at.info['Comp']]
+            except:
+                buf[at.info['Nmols']] += [at.info['config_type']]
+        else:
+            try:
+                buf[at.info['Nmols']] = [at.info['Comp']]
+            except:
+                buf[at.info['Nmols']] = [at.info['config_type']]
+
+    comp = {}
+    for b in buf:
+        comp[b] = dict(Counter(buf[b]))
+    return comp
+
+def wrap_labels(labels):
+    wrapped_labels = []
+    for label in labels:
+        parts = label.split(':')
+        for i in range(1, len(parts) - 1, 2):
+            parts[i] += '\n'
+        wrapped_labels.append(':'.join(parts))
+    return wrapped_labels
+
+def flatten_comp(comp_dict):
+    flattened_comp_dict = {}
+    for csize, dist in comp_dict.items():
+        #print(csize)
+        #print(dist)
+        tmp = {
+            'EMC':0,
+            'EC':0,
+            'EC and EMC and other':0,
+            'EC or EMC and other':0,
+            'Other':0,
+        }
+        for comp, count in dist.items():
+            #print(comp, count)
+            part = comp.split(':')
+            part = [p.split('(')[0] for p in part]
+            part = [''.join([i for i in p if not i.isdigit()]) for p in part]
+            #print(part)
+            if ('EC' not in part) and ('EMC' not in part):
+                #print('not EC not EMC', part)
+                tmp['Other'] += count
+            
+            elif ('EC' in part) and ('EMC' in part):
+                #print('not EC not EMC', part)
+                tmp['EC and EMC and other'] += count
+            
+            elif ('EC' in part) and ('EMC' not in part):
+                if len(set(part)) == 1:
+                    #print('only EC', part)
+                    tmp['EC'] += count
+                else:
+                    #print('EC and other', part)
+                    tmp['EC or EMC and other'] += count
+
+            elif ('EC' not in part) and ('EMC' in part):
+                if len(set(part)) == 1:
+                    #print('only EMC', part)
+                    tmp['EMC'] += count
+                else:
+                    #print('EMC and other', part)
+                    tmp['EC or EMC and other'] += count
+            else:
+                tmp['EC or EMC and other'] += count
+            
+        flattened_comp_dict[csize] = tmp
+    df = pd.DataFrame(flattened_comp_dict).T
+    return df.sort_index(inplace=False)
