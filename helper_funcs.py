@@ -80,11 +80,21 @@ def RMSE(x,y):
     return rmse, rrmse
 
 def get_colour(name):
+    import tol_colors as tc
+    cset = tc.tol_cset('bright')
+
     colmap = {
         'EMC (298$\,$K)':'blue',
         'EC:EMC (3:7) (298$\,$K)':'green',
         'EC:EMC (7:3) (298$\,$K)':'yellow',
         'EC (313$\,$K)':'red',
+    }
+
+    tmap = {
+        'npt_000conEC_298K':'EMC (298$\,$K)',
+        'npt_033conEC_298K':'EC:EMC (3:7) (298$\,$K)',
+        'npt_066conEC_298K':'EC:EMC (7:3) (298$\,$K)',
+        'npt_100conEC_313K':'EC (313$\,$K)',
     }
     try:
         return getattr(cset, colmap[name])
@@ -92,27 +102,41 @@ def get_colour(name):
         return getattr(cset, colmap[tmap[name]])
 
 def get_average_density(dataframe, col, value):
-	# Filter out the 'other' column (we either average sample or seed)
-	col_set = ['Seed', 'Sample']; col_set.remove(col)
-	filtered_dataframe = dataframe[dataframe[col_set[0]] == value]
+    tmap = {
+        'npt_000conEC_298K':'EMC (298$\,$K)',
+        'npt_033conEC_298K':'EC:EMC (3:7) (298$\,$K)',
+        'npt_066conEC_298K':'EC:EMC (7:3) (298$\,$K)',
+        'npt_100conEC_313K':'EC (313$\,$K)',
+    }
 
-	# Get statistics
-	df_list = []
-	for comp, comp_df in filtered_dataframe.groupby('Composition'):
-		for train, train_df in comp_df.groupby('Train data'):
-			mean = train_df['Avg. density'].mean()
-			variance = train_df['Avg. density'].var()
-			agg_col = train_df.drop(col, axis=1)
-			agg_col['Avg. density'] = mean
-			agg_col['Stdev.'] = variance**0.5
-			df_list.append(agg_col)
+    # Filter out the 'other' column (we either average sample or seed)
+    col_set = ['Seed', 'Sample']; col_set.remove(col)
+    filtered_dataframe = dataframe[dataframe[col_set[0]] == value]
 
-	# Merge data frames and remove duplicate rows
-	merged_df = pd.concat(df_list, ignore_index=True)
-	clean_df = merged_df.drop_duplicates()
-	return clean_df
+    # Get statistics
+    df_list = []
+    for comp, comp_df in filtered_dataframe.groupby('Composition'):
+        for train, train_df in comp_df.groupby('Train data'):
+            mean = train_df['Avg. density'].mean()
+            variance = train_df['Avg. density'].var()
+            agg_col = train_df.drop(col, axis=1)
+            agg_col['Avg. density'] = mean
+            agg_col['Stdev.'] = variance**0.5
+            df_list.append(agg_col)
 
-def get_density(tags, std=False):
+    # Merge data frames and remove duplicate rows
+    merged_df = pd.concat(df_list, ignore_index=True)
+    clean_df = merged_df.drop_duplicates()
+    return clean_df
+
+def get_density(tags, dynamics_path, std=False):
+    conmap = {
+        '000conEC':'EMC (298$\,$K)',
+        '033conEC':'EC:EMC (3:7) (298$\,$K)',
+        '066conEC':'EC:EMC (7:3) (298$\,$K)',
+        '100conEC':'EC (313$\,$K)',
+    }
+    
     # Compute average densities
     dens = dict()
     if std:
